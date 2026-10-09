@@ -1,0 +1,23 @@
+[gd_scene load_steps=4 format=3 uid="uid://obstacle_asteroid01"]
+
+[ext_resource type="Script" path="res://scripts/obstacle_base.gd" id="1_base"]
+[ext_resource type="Texture2D" path="res://assets/sprites/obstacles/asteroid.png" id="2_tex"]
+
+[sub_resource type="CircleShape2D" id="shape_asteroid"]
+radius = 45.0
+
+[node name="Asteroid" type="RigidBody2D"]
+collision_layer = 2
+collision_mask = 1
+gravity_scale = 0.0
+script = ExtResource("1_base")
+damage = 30.0
+obstacle_type = "asteroid"
+speed_base = 320.0
+
+[node name="Sprite2D" type="Sprite2D" parent="."]
+texture = ExtResource("2_tex")
+scale = Vector2(0.95, 0.95)
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="."]
+shape = SubResource("shape_asteroid")

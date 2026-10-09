@@ -1,0 +1,150 @@
+[gd_scene format=3 uid="uid://ttract001"]
+
+[ext_resource type="Script" uid="uid://ctpn0xymg5151" path="res://scripts/attract.gd" id="1_attract"]
+[ext_resource type="Script" uid="uid://6mw0lqkumk7g" path="res://scripts/orbit_ring.gd" id="2_orbitring"]
+[ext_resource type="Texture2D" uid="uid://c86t3ew2r4t8a" path="res://assets/sprites/ui/bg_stars.png" id="3_stars"]
+[ext_resource type="Texture2D" uid="uid://cnmd8fdw7sw44" path="res://assets/sprites/planets/earth.png" id="4_earth"]
+[ext_resource type="Texture2D" uid="uid://dp0mbxl3er4oi" path="res://assets/sprites/planets/moon.png" id="5_moon"]
+[ext_resource type="Script" uid="uid://c7qg8nh6c8sd4" path="res://scripts/starfield_bg.gd" id="7_starbg"]
+[ext_resource type="Texture2D" uid="uid://cf808bj06gc01" path="res://assets/sprites/ships/ship1.png" id="8_0usjx"]
+[ext_resource type="Texture2D" uid="uid://y0ilo0ntac6q" path="res://assets/ui/bg_cosmos.png" id="8_cosmos"]
+
+[sub_resource type="Animation" id="Animation_orbit"]
+resource_name = "orbit_planets"
+length = 90.0
+loop_mode = 1
+tracks/0/type = "value"
+tracks/0/imported = false
+tracks/0/enabled = true
+tracks/0/path = NodePath("SolarSystemAnim/OrbitMoon:rotation")
+tracks/0/interp = 1
+tracks/0/loop_wrap = true
+tracks/0/keys = {
+"times": PackedFloat32Array(0, 90),
+"transitions": PackedFloat32Array(1, 1),
+"update": 0,
+"values": [0.0, 31.4159]
+}
+tracks/1/type = "value"
+tracks/1/imported = false
+tracks/1/enabled = true
+tracks/1/path = NodePath("SolarSystemAnim/OrbitShip:rotation")
+tracks/1/interp = 1
+tracks/1/loop_wrap = true
+tracks/1/keys = {
+"times": PackedFloat32Array(0, 90),
+"transitions": PackedFloat32Array(1, 1),
+"update": 0,
+"values": [0.0, -56.5487]
+}
+
+[sub_resource type="AnimationLibrary" id="AnimationLibrary_orbit"]
+_data = {
+&"orbit_planets": SubResource("Animation_orbit")
+}
+
+[node name="Attract" type="Node2D" unique_id=1442186141]
+script = ExtResource("1_attract")
+
+[node name="Background" type="TextureRect" parent="." unique_id=230116997]
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+mouse_filter = 2
+texture = ExtResource("8_cosmos")
+expand_mode = 1
+stretch_mode = 6
+
+[node name="StarsBG" type="TextureRect" parent="." unique_id=1730252744]
+modulate = Color(1, 1, 1, 0.4)
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+mouse_filter = 2
+texture = ExtResource("3_stars")
+expand_mode = 1
+stretch_mode = 6
+
+[node name="StarfieldBg" type="Node2D" parent="." unique_id=1105129432]
+script = ExtResource("7_starbg")
+
+[node name="SolarSystemAnim" type="Node2D" parent="." unique_id=1086730901]
+position = Vector2(960, 380)
+
+[node name="OrbitRing_Ship" type="Node2D" parent="SolarSystemAnim" unique_id=287648798]
+script = ExtResource("2_orbitring")
+radius = 210.0
+
+[node name="OrbitRing_Moon" type="Node2D" parent="SolarSystemAnim" unique_id=1286900920]
+script = ExtResource("2_orbitring")
+radius = 140.0
+fill_color = Color(0, 0, 0, 0)
+ring_color = Color(0.45, 0.55, 0.9, 0.5)
+ring_width = 2.0
+
+[node name="Earth" type="Sprite2D" parent="SolarSystemAnim" unique_id=1349507302]
+scale = Vector2(0.14, 0.14)
+texture = ExtResource("4_earth")
+
+[node name="OrbitMoon" type="Node2D" parent="SolarSystemAnim" unique_id=1701000982]
+
+[node name="MoonPlanet" type="Sprite2D" parent="SolarSystemAnim/OrbitMoon" unique_id=156936872]
+position = Vector2(0, -140)
+scale = Vector2(0.04, 0.04)
+texture = ExtResource("5_moon")
+
+[node name="OrbitShip" type="Node2D" parent="SolarSystemAnim" unique_id=722266956]
+
+[node name="ShipSprite" type="Sprite2D" parent="SolarSystemAnim/OrbitShip" unique_id=615100718]
+position = Vector2(210, 0)
+scale = Vector2(0.3, 0.3)
+texture = ExtResource("8_0usjx")
+
+[node name="AnimationPlayer" type="AnimationPlayer" parent="." unique_id=1157176846]
+libraries/ = SubResource("AnimationLibrary_orbit")
+
+[node name="UI" type="CanvasLayer" parent="." unique_id=810961917]
+
+[node name="TitleLabel" type="Label" parent="UI" unique_id=1343144018]
+anchors_preset = -1
+anchor_left = 0.5
+anchor_top = 0.62
+anchor_right = 0.5
+anchor_bottom = 0.62
+offset_left = -400.0
+offset_right = 400.0
+theme_override_colors/font_color = Color(1, 1, 1, 1)
+theme_override_font_sizes/font_size = 56
+text = "COSMOS EXPLORER"
+horizontal_alignment = 1
+
+[node name="SubtitleLabel" type="Label" parent="UI" unique_id=36561036]
+anchors_preset = -1
+anchor_left = 0.5
+anchor_top = 0.7
+anchor_right = 0.5
+anchor_bottom = 0.7
+offset_left = -300.0
+offset_right = 300.0
+theme_override_colors/font_color = Color(0.62, 0.6, 0.95, 1)
+theme_override_font_sizes/font_size = 30
+text = "นักบินอวกาศตัวน้อย"
+horizontal_alignment = 1
+
+[node name="TapButton" type="Button" parent="UI" unique_id=295582146]
+anchors_preset = -1
+anchor_left = 0.5
+anchor_top = 0.85
+anchor_right = 0.5
+anchor_bottom = 0.85
+offset_left = -220.0
+offset_top = -36.0
+offset_right = 220.0
+offset_bottom = 36.0
+theme_override_font_sizes/font_size = 26
+text = "แตะเพื่อเริ่มผจญภัย!"
+
+[node name="IdleTimer" type="Timer" parent="." unique_id=172657858]
+wait_time = 180.0
+one_shot = true
+autostart = true

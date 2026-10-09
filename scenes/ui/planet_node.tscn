@@ -1,0 +1,21 @@
+[gd_scene load_steps=3 format=3 uid="uid://planetnode001"]
+[ext_resource type="Script" path="res://scripts/planet_node.gd" id="1_pn"]
+
+[sub_resource type="CircleShape2D" id="circle_planet"]
+radius = 44.0
+
+[node name="PlanetNode" type="Area2D"]
+script = ExtResource("1_pn")
+
+[node name="Sprite2D" type="Sprite2D" parent="."]
+[node name="CollisionShape2D" type="CollisionShape2D" parent="."]
+shape = SubResource("circle_planet")
+[node name="NameLabel" type="Label" parent="."]
+position = Vector2(-55, 46)
+custom_minimum_size = Vector2(110, 0)
+horizontal_alignment = 1
+[node name="DiffBadge" type="Label" parent="."]
+position = Vector2(-55, 74)
+custom_minimum_size = Vector2(110, 0)
+horizontal_alignment = 1
+[node name="GlowEffect" type="Node2D" parent="."]

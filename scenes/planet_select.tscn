@@ -1,0 +1,144 @@
+[gd_scene format=3 uid="uid://bmrbbo0vy3t3e"]
+
+[ext_resource type="Script" uid="uid://d3v4hqs3jxo0i" path="res://scripts/planet_select.gd" id="1_ps"]
+[ext_resource type="Script" uid="uid://dphxorf3y7bkm" path="res://scripts/orbit_paths.gd" id="2_op"]
+[ext_resource type="Script" uid="uid://c7qg8nh6c8sd4" path="res://scripts/starfield_bg.gd" id="3_starbg"]
+
+[sub_resource type="CircleShape2D" id="shape_sun"]
+radius = 110.0
+
+[node name="PlanetSelect" type="Node2D" unique_id=411149841]
+script = ExtResource("1_ps")
+
+[node name="UI" type="CanvasLayer" parent="." unique_id=1727021607]
+
+[node name="HeaderLabel" type="Label" parent="UI" unique_id=833258175]
+anchors_preset = -1
+anchor_left = 0.5
+anchor_top = 0.04
+anchor_right = 0.5
+anchor_bottom = 0.04
+offset_left = -360.0
+offset_right = 360.0
+text = "เลือกดาวปลายทาง"
+horizontal_alignment = 1
+
+[node name="SubLabel" type="Label" parent="UI" unique_id=1286705993]
+anchors_preset = -1
+anchor_left = 0.5
+anchor_top = 0.085
+anchor_right = 0.5
+anchor_bottom = 0.085
+offset_left = -360.0
+offset_right = 360.0
+text = "แตะดาวเพื่อดูข้อมูลและเลือกภารกิจ"
+horizontal_alignment = 1
+
+[node name="InfoPanel" type="PanelContainer" parent="UI" unique_id=1652535642]
+visible = false
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -300.0
+offset_top = -330.0
+offset_right = 300.0
+offset_bottom = 330.0
+
+[node name="InfoVBox" type="VBoxContainer" parent="UI/InfoPanel" unique_id=1738315528]
+layout_mode = 2
+theme_override_constants/separation = 14
+
+[node name="HeaderRow" type="HBoxContainer" parent="UI/InfoPanel/InfoVBox" unique_id=1232878599]
+layout_mode = 2
+theme_override_constants/separation = 18
+
+[node name="PlanetPreview" type="TextureRect" parent="UI/InfoPanel/InfoVBox/HeaderRow" unique_id=399925420]
+custom_minimum_size = Vector2(150, 150)
+layout_mode = 2
+expand_mode = 1
+stretch_mode = 5
+
+[node name="NameCol" type="VBoxContainer" parent="UI/InfoPanel/InfoVBox/HeaderRow" unique_id=1346171604]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_constants/separation = 6
+alignment = 1
+
+[node name="PlanetName" type="Label" parent="UI/InfoPanel/InfoVBox/HeaderRow/NameCol" unique_id=1851045665]
+layout_mode = 2
+horizontal_alignment = 1
+
+[node name="PlanetEN" type="Label" parent="UI/InfoPanel/InfoVBox/HeaderRow/NameCol" unique_id=1874124349]
+layout_mode = 2
+horizontal_alignment = 1
+
+[node name="Distance" type="Label" parent="UI/InfoPanel/InfoVBox" unique_id=250306811]
+layout_mode = 2
+
+[node name="Temperature" type="Label" parent="UI/InfoPanel/InfoVBox" unique_id=1598069948]
+layout_mode = 2
+
+[node name="Gravity" type="Label" parent="UI/InfoPanel/InfoVBox" unique_id=1231885566]
+layout_mode = 2
+
+[node name="TimeLimit" type="Label" parent="UI/InfoPanel/InfoVBox" unique_id=740173575]
+layout_mode = 2
+
+[node name="Difficulty" type="Label" parent="UI/InfoPanel/InfoVBox" unique_id=2114048476]
+layout_mode = 2
+horizontal_alignment = 1
+
+[node name="FunFactBox" type="PanelContainer" parent="UI/InfoPanel/InfoVBox" unique_id=1768495332]
+layout_mode = 2
+
+[node name="FunFact" type="Label" parent="UI/InfoPanel/InfoVBox/FunFactBox" unique_id=440569025]
+layout_mode = 2
+autowrap_mode = 3
+
+[node name="BtnRow" type="HBoxContainer" parent="UI/InfoPanel/InfoVBox" unique_id=851558535]
+layout_mode = 2
+theme_override_constants/separation = 16
+
+[node name="BackButton" type="Button" parent="UI/InfoPanel/InfoVBox/BtnRow" unique_id=835370529]
+layout_mode = 2
+size_flags_horizontal = 3
+text = "◀ กลับ"
+
+[node name="SelectButton" type="Button" parent="UI/InfoPanel/InfoVBox/BtnRow" unique_id=1247485089]
+layout_mode = 2
+size_flags_horizontal = 3
+text = "รับภารกิจ!"
+
+[node name="BackMenuButton" type="Button" parent="UI" unique_id=284738790]
+anchors_preset = -1
+anchor_top = 0.94
+anchor_bottom = 0.94
+offset_left = 20.0
+offset_right = 140.0
+text = "◀ เมนู"
+
+[node name="BG" type="ColorRect" parent="." unique_id=138501747]
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+color = Color(0.03, 0.04, 0.11, 1)
+
+[node name="StarfieldBg" type="Node2D" parent="." unique_id=1417392435]
+script = ExtResource("3_starbg")
+ship_count = 0
+
+[node name="SolarSystemMap" type="Node2D" parent="." unique_id=962270766]
+
+[node name="OrbitPaths" type="Node2D" parent="SolarSystemMap" unique_id=713742673]
+script = ExtResource("2_op")
+
+[node name="SunGlow" type="Sprite2D" parent="SolarSystemMap" unique_id=1804878369]
+
+[node name="Sun" type="Sprite2D" parent="SolarSystemMap" unique_id=1763506112]
+
+[node name="SunArea" type="Area2D" parent="SolarSystemMap" unique_id=234265914]
+
+[node name="SunCollision" type="CollisionShape2D" parent="SolarSystemMap/SunArea" unique_id=815056836]
+shape = SubResource("shape_sun")

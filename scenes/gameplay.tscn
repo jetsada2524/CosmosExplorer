@@ -1,0 +1,489 @@
+[gd_scene format=3 uid="uid://gameplay001"]
+
+[ext_resource type="Script" uid="uid://hc4a6gpcecx5" path="res://scripts/gameplay.gd" id="1_gp"]
+[ext_resource type="Script" uid="uid://dek3tmjjuywjg" path="res://scripts/cockpit_3d.gd" id="2_c3d"]
+[ext_resource type="Script" uid="uid://c1eimxtyr2ht5" path="res://scripts/hud.gd" id="4_hud"]
+[ext_resource type="Script" uid="uid://b1dgndtyfp8k8" path="res://scripts/quiz.gd" id="5_quiz"]
+
+[sub_resource type="CameraAttributesPractical" id="CamAttr_001"]
+
+[sub_resource type="ProceduralSkyMaterial" id="ProceduralSkyMaterial_001"]
+sky_top_color = Color(0.025, 0.01, 0.085, 1)
+sky_horizon_color = Color(0.07, 0.03, 0.16, 1)
+sky_curve = 0.12
+ground_bottom_color = Color(0.015, 0.006, 0.05, 1)
+ground_horizon_color = Color(0.04, 0.015, 0.1, 1)
+sun_angle_max = 20.0
+sun_curve = 0.1
+energy_multiplier = 0.4
+
+[sub_resource type="Sky" id="Sky_001"]
+sky_material = SubResource("ProceduralSkyMaterial_001")
+
+[sub_resource type="Environment" id="Environment_001"]
+background_mode = 2
+sky = SubResource("Sky_001")
+ambient_light_source = 3
+ambient_light_color = Color(0.15, 0.08, 0.35, 1)
+ambient_light_energy = 0.6
+glow_enabled = true
+glow_normalized = true
+glow_intensity = 0.9
+glow_bloom = 0.12
+
+[node name="Gameplay" type="Node" unique_id=89224514]
+script = ExtResource("1_gp")
+
+[node name="World3D" type="Node3D" parent="." unique_id=290836757]
+script = ExtResource("2_c3d")
+
+[node name="Camera3D" type="Camera3D" parent="World3D" unique_id=133220235]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.2, 0)
+attributes = SubResource("CamAttr_001")
+far = 200.0
+
+[node name="WorldEnvironment" type="WorldEnvironment" parent="World3D" unique_id=678969575]
+environment = SubResource("Environment_001")
+
+[node name="DirectionalLight3D" type="DirectionalLight3D" parent="World3D" unique_id=1301333642]
+transform = Transform3D(0.866, -0.354, 0.354, 0, 0.707, 0.707, -0.5, -0.612, 0.612, 0, 20, 10)
+light_color = Color(0.95, 0.88, 1, 1)
+light_energy = 1.2
+shadow_enabled = true
+
+[node name="OmniLight3D" type="OmniLight3D" parent="World3D" unique_id=665615874]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -8, 4, -20)
+light_color = Color(0.3, 0.6, 1, 1)
+light_energy = 0.8
+omni_range = 40.0
+
+[node name="MeteoriteRoot" type="Node3D" parent="World3D" unique_id=97203455]
+
+[node name="HUD" type="CanvasLayer" parent="." unique_id=537502622]
+layer = 10
+script = ExtResource("4_hud")
+
+[node name="PauseChip" type="PanelContainer" parent="HUD" unique_id=347369138]
+offset_left = 10.0
+offset_top = 10.0
+
+[node name="PauseRow" type="HBoxContainer" parent="HUD/PauseChip" unique_id=1816474166]
+layout_mode = 2
+theme_override_constants/separation = 6
+
+[node name="PauseBtn" type="Button" parent="HUD/PauseChip/PauseRow" unique_id=1348944345]
+custom_minimum_size = Vector2(34, 28)
+layout_mode = 2
+text = "||"
+
+[node name="PauseSep" type="VSeparator" parent="HUD/PauseChip/PauseRow" unique_id=1304705282]
+custom_minimum_size = Vector2(1, 18)
+layout_mode = 2
+
+[node name="PlanetNameLabel" type="Label" parent="HUD/PauseChip/PauseRow" unique_id=2088026682]
+layout_mode = 2
+vertical_alignment = 1
+
+[node name="TimerChip" type="PanelContainer" parent="HUD" unique_id=932233972]
+anchors_preset = 5
+anchor_left = 0.5
+anchor_right = 0.5
+offset_left = -72.0
+offset_top = 8.0
+offset_right = 72.0
+offset_bottom = 52.0
+
+[node name="TimerLabel" type="Label" parent="HUD/TimerChip" unique_id=181574678]
+layout_mode = 2
+text = "00:00"
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="ScoreChip" type="PanelContainer" parent="HUD" unique_id=1475325511]
+anchors_preset = 1
+anchor_left = 1.0
+anchor_right = 1.0
+offset_left = -150.0
+offset_top = 10.0
+offset_right = -10.0
+offset_bottom = 52.0
+
+[node name="ScoreRow" type="HBoxContainer" parent="HUD/ScoreChip" unique_id=962187258]
+layout_mode = 2
+alignment = 1
+
+[node name="CoinLabel" type="Label" parent="HUD/ScoreChip/ScoreRow" unique_id=1356383024]
+layout_mode = 2
+text = "0"
+vertical_alignment = 1
+
+[node name="ProgressTrack" type="Control" parent="HUD" unique_id=631892297]
+layout_mode = 3
+anchors_preset = 10
+anchor_right = 1.0
+offset_left = 14.0
+offset_top = 57.0
+offset_right = -14.0
+offset_bottom = 65.0
+grow_horizontal = 2
+
+[node name="TrackBG" type="Panel" parent="HUD/ProgressTrack" unique_id=704481297]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="TrackFill" type="Panel" parent="HUD/ProgressTrack" unique_id=2016136267]
+layout_mode = 0
+anchor_bottom = 1.0
+offset_right = 4.0
+grow_vertical = 2
+
+[node name="Checkpoint1" type="PanelContainer" parent="HUD/ProgressTrack" unique_id=788574778]
+layout_mode = 1
+anchors_preset = -1
+anchor_left = 0.33
+anchor_top = 0.5
+anchor_right = 0.33
+anchor_bottom = 0.5
+offset_left = -9.0
+offset_top = -9.0
+offset_right = 9.0
+offset_bottom = 9.0
+
+[node name="CPLabel1" type="Label" parent="HUD/ProgressTrack/Checkpoint1" unique_id=174528688]
+layout_mode = 2
+text = "v"
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="Checkpoint2" type="PanelContainer" parent="HUD/ProgressTrack" unique_id=2033781859]
+layout_mode = 1
+anchors_preset = -1
+anchor_left = 0.66
+anchor_top = 0.5
+anchor_right = 0.66
+anchor_bottom = 0.5
+offset_left = -9.0
+offset_top = -9.0
+offset_right = 9.0
+offset_bottom = 9.0
+
+[node name="CPLabel2" type="Label" parent="HUD/ProgressTrack/Checkpoint2" unique_id=1714703034]
+layout_mode = 2
+text = "v"
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="RocketLabel" type="Label" parent="HUD/ProgressTrack" unique_id=1108614806]
+layout_mode = 0
+anchor_top = 0.5
+anchor_bottom = 0.5
+offset_left = -14.0
+offset_top = -14.0
+offset_right = 14.0
+offset_bottom = 14.0
+text = ">"
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="FlagLabel" type="Label" parent="HUD/ProgressTrack" unique_id=1833038241]
+layout_mode = 1
+anchors_preset = -1
+anchor_left = 1.0
+anchor_top = 0.5
+anchor_right = 1.0
+anchor_bottom = 0.5
+offset_left = -18.0
+offset_top = -14.0
+offset_right = 4.0
+offset_bottom = 14.0
+text = "|"
+horizontal_alignment = 2
+vertical_alignment = 1
+
+[node name="InstrumentStrip" type="HBoxContainer" parent="HUD" unique_id=964240098]
+anchors_preset = 12
+anchor_top = 1.0
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_top = -232.0
+offset_bottom = -162.0
+theme_override_constants/separation = 0
+alignment = 1
+
+[node name="HPValueLabel" type="Label" parent="HUD/InstrumentStrip" unique_id=1250393472]
+custom_minimum_size = Vector2(72, 0)
+layout_mode = 2
+text = "100%"
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="StripSep1" type="VSeparator" parent="HUD/InstrumentStrip" unique_id=1611964519]
+layout_mode = 2
+
+[node name="SpeedPanel" type="PanelContainer" parent="HUD/InstrumentStrip" unique_id=1462465466]
+layout_mode = 2
+size_flags_horizontal = 3
+
+[node name="SpeedVBox" type="VBoxContainer" parent="HUD/InstrumentStrip/SpeedPanel" unique_id=876093866]
+layout_mode = 2
+alignment = 1
+
+[node name="SpeedLabel" type="Label" parent="HUD/InstrumentStrip/SpeedPanel/SpeedVBox" unique_id=1296308423]
+layout_mode = 2
+text = "785"
+horizontal_alignment = 1
+
+[node name="UnitLabel" type="Label" parent="HUD/InstrumentStrip/SpeedPanel/SpeedVBox" unique_id=751539920]
+layout_mode = 2
+text = "km/h"
+horizontal_alignment = 1
+
+[node name="StripSep2" type="VSeparator" parent="HUD/InstrumentStrip" unique_id=918385538]
+layout_mode = 2
+
+[node name="ShieldPanel" type="PanelContainer" parent="HUD/InstrumentStrip" unique_id=847037277]
+layout_mode = 2
+
+[node name="ShieldVBox" type="VBoxContainer" parent="HUD/InstrumentStrip/ShieldPanel" unique_id=1988531986]
+layout_mode = 2
+theme_override_constants/separation = 0
+alignment = 1
+
+[node name="ShieldIcon" type="Label" parent="HUD/InstrumentStrip/ShieldPanel/ShieldVBox" unique_id=260424877]
+layout_mode = 2
+text = "[S]"
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="ShieldText" type="Label" parent="HUD/InstrumentStrip/ShieldPanel/ShieldVBox" unique_id=1333943950]
+layout_mode = 2
+text = "OFF"
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="StripSep3" type="VSeparator" parent="HUD/InstrumentStrip" unique_id=1622907230]
+layout_mode = 2
+
+[node name="EnergyValueLabel" type="Label" parent="HUD/InstrumentStrip" unique_id=1673316310]
+custom_minimum_size = Vector2(72, 0)
+layout_mode = 2
+text = "100%"
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="SteerLeftBtn" type="Button" parent="HUD" unique_id=1015993461]
+anchors_preset = -1
+anchor_top = 0.723
+anchor_right = 0.33
+anchor_bottom = 1.0
+offset_top = 2.0
+offset_right = -2.0
+offset_bottom = -2.0
+text = "<"
+
+[node name="BoostBtn" type="Button" parent="HUD" unique_id=1455637638]
+anchors_preset = -1
+anchor_left = 0.38
+anchor_top = 0.88
+anchor_right = 0.62
+anchor_bottom = 0.975
+offset_left = 4.0
+offset_right = -4.0
+action_mode = 0
+text = "BOOST"
+
+[node name="SteerRightBtn" type="Button" parent="HUD" unique_id=907067443]
+anchors_preset = -1
+anchor_left = 0.67
+anchor_top = 0.723
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = 2.0
+offset_top = 2.0
+offset_bottom = -2.0
+text = ">"
+
+[node name="ControlBlocker" type="ColorRect" parent="HUD" unique_id=93957752]
+anchors_preset = -1
+anchor_top = 0.723
+anchor_right = 1.0
+anchor_bottom = 1.0
+color = Color(0.02, 0.03, 0.08, 0.55)
+
+[node name="MissionLabel" type="Label" parent="HUD" unique_id=1314651903]
+visible = false
+anchors_preset = 5
+anchor_left = 0.5
+anchor_right = 0.5
+offset_left = -100.0
+offset_right = 100.0
+offset_bottom = 20.0
+
+[node name="BoostBadge" type="PanelContainer" parent="HUD" unique_id=1487114472]
+visible = false
+anchors_preset = 5
+anchor_left = 0.5
+anchor_right = 0.5
+offset_left = -90.0
+offset_top = 66.0
+offset_right = 90.0
+offset_bottom = 98.0
+
+[node name="BoostBadgeLabel" type="Label" parent="HUD/BoostBadge" unique_id=1687773196]
+layout_mode = 2
+text = "BOOST x1.5"
+horizontal_alignment = 1
+
+[node name="ScienceTipPanel" type="PanelContainer" parent="HUD" unique_id=1721315056]
+anchors_preset = -1
+anchor_left = 0.02
+anchor_top = 0.52
+anchor_right = 0.27
+anchor_bottom = 0.64
+offset_left = -0.3999977
+offset_top = -347.59998
+offset_right = -0.4000244
+offset_bottom = -347.59998
+
+[node name="TipLabel" type="Label" parent="HUD/ScienceTipPanel" unique_id=322042751]
+layout_mode = 2
+autowrap_mode = 3
+
+[node name="ScienceTipTimer" type="Timer" parent="HUD" unique_id=2096465925]
+wait_time = 30.0
+
+[node name="PausePanel" type="Control" parent="HUD" unique_id=184761181]
+visible = false
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="PauseBG" type="ColorRect" parent="HUD/PausePanel" unique_id=1372787107]
+layout_mode = 0
+anchor_right = 1.0
+anchor_bottom = 1.0
+color = Color(0, 0, 0, 0.7)
+
+[node name="PauseCardPanel" type="PanelContainer" parent="HUD/PausePanel" unique_id=1587987484]
+layout_mode = 0
+anchor_left = 0.5
+anchor_top = 0.35
+anchor_right = 0.5
+anchor_bottom = 0.65
+offset_left = -150.0
+offset_right = 150.0
+
+[node name="PauseCard" type="VBoxContainer" parent="HUD/PausePanel/PauseCardPanel" unique_id=1003694952]
+layout_mode = 2
+theme_override_constants/separation = 18
+
+[node name="PauseTitleLabel" type="Label" parent="HUD/PausePanel/PauseCardPanel/PauseCard" unique_id=299806975]
+layout_mode = 2
+text = "PAUSE"
+horizontal_alignment = 1
+
+[node name="ResumeBtn" type="Button" parent="HUD/PausePanel/PauseCardPanel/PauseCard" unique_id=739160883]
+layout_mode = 2
+text = "Resume"
+
+[node name="QuitBtn" type="Button" parent="HUD/PausePanel/PauseCardPanel/PauseCard" unique_id=901342411]
+layout_mode = 2
+text = "Quit"
+
+[node name="CountdownLabel" type="Label" parent="HUD" unique_id=2003405765]
+visible = false
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -260.0
+offset_top = -140.0
+offset_right = 260.0
+offset_bottom = 140.0
+text = "3"
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="BoostFlash" type="ColorRect" parent="HUD" unique_id=282519414]
+visible = false
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+mouse_filter = 2
+color = Color(1, 0.55, 0.05, 0.08)
+
+[node name="QuizPopup" type="CanvasLayer" parent="." unique_id=1294677713]
+layer = 10
+script = ExtResource("5_quiz")
+
+[node name="QuizBG" type="ColorRect" parent="QuizPopup" unique_id=288659260]
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+color = Color(0, 0, 0, 0.75)
+
+[node name="Panel" type="PanelContainer" parent="QuizPopup" unique_id=1817134644]
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -380.0
+offset_top = -280.0
+offset_right = 380.0
+offset_bottom = 280.0
+
+[node name="QuizVBox" type="VBoxContainer" parent="QuizPopup/Panel" unique_id=895962733]
+layout_mode = 2
+
+[node name="QuizTitle" type="Label" parent="QuizPopup/Panel/QuizVBox" unique_id=630790258]
+layout_mode = 2
+text = "Science Quiz!"
+horizontal_alignment = 1
+
+[node name="QuestionLabel" type="Label" parent="QuizPopup/Panel/QuizVBox" unique_id=695995517]
+layout_mode = 2
+horizontal_alignment = 1
+autowrap_mode = 3
+
+[node name="AnswerGrid" type="GridContainer" parent="QuizPopup/Panel/QuizVBox" unique_id=417864344]
+layout_mode = 2
+size_flags_horizontal = 4
+columns = 2
+
+[node name="QuizArt" type="CenterContainer" parent="QuizPopup/Panel/QuizVBox" unique_id=952484939]
+layout_mode = 2
+size_flags_vertical = 3
+
+[node name="ArtIcon" type="Label" parent="QuizPopup/Panel/QuizVBox/QuizArt" unique_id=1641908303]
+layout_mode = 2
+text = "?"
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="FeedbackPanel" type="PanelContainer" parent="QuizPopup/Panel/QuizVBox" unique_id=1335666727]
+visible = false
+layout_mode = 2
+
+[node name="FeedbackLabel" type="Label" parent="QuizPopup/Panel/QuizVBox/FeedbackPanel" unique_id=1843931765]
+layout_mode = 2
+horizontal_alignment = 1
+autowrap_mode = 3
+
+[node name="BonusLabel" type="Label" parent="QuizPopup/Panel/QuizVBox" unique_id=1199352856]
+visible = false
+layout_mode = 2
+horizontal_alignment = 1
+
+[node name="CloseTimer" type="Timer" parent="QuizPopup" unique_id=962190453]
+one_shot = true
+
+[node name="BGM" type="AudioStreamPlayer" parent="." unique_id=2139097031]

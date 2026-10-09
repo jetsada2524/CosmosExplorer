@@ -1,0 +1,87 @@
+[gd_scene format=3 uid="uid://gameover001"]
+
+[ext_resource type="Script" uid="uid://df6i8yoimqhfn" path="res://scripts/game_over.gd" id="1_go"]
+
+[node name="GameOver" type="Control" unique_id=6608292]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+script = ExtResource("1_go")
+
+[node name="BG" type="ColorRect" parent="." unique_id=134643597]
+layout_mode = 0
+anchor_right = 1.0
+anchor_bottom = 1.0
+color = Color(0.05, 0.01, 0.01, 1)
+
+[node name="AnimationPlayer" type="AnimationPlayer" parent="." unique_id=1255294237]
+
+[node name="Frame" type="TextureRect" parent="." unique_id=426483650]
+layout_mode = 1
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -560.0
+offset_top = -367.0
+offset_right = 540.0
+offset_bottom = 367.0
+grow_horizontal = 2
+grow_vertical = 2
+expand_mode = 1
+
+[node name="Content" type="VBoxContainer" parent="Frame" unique_id=1932970264]
+layout_mode = 0
+offset_left = 150.0
+offset_top = 112.0
+offset_right = 970.0
+offset_bottom = 610.0
+theme_override_constants/separation = 6
+alignment = 1
+
+[node name="ReasonLabel" type="Label" parent="Frame/Content" unique_id=834181359]
+layout_mode = 2
+text = "💥 ยานพัง!"
+horizontal_alignment = 1
+
+[node name="ScoreLabel" type="Label" parent="Frame/Content" unique_id=1505146036]
+layout_mode = 2
+text = "0"
+horizontal_alignment = 1
+
+[node name="ProgressLabel" type="Label" parent="Frame/Content" unique_id=1550589894]
+layout_mode = 2
+text = "ระยะทาง 0%"
+horizontal_alignment = 1
+
+[node name="EncourageLabel" type="Label" parent="Frame/Content" unique_id=1568514208]
+layout_mode = 2
+horizontal_alignment = 1
+autowrap_mode = 3
+
+[node name="BtnSpacer" type="Control" parent="Frame/Content" unique_id=1014672303]
+custom_minimum_size = Vector2(0, 18)
+layout_mode = 2
+
+[node name="BtnRow" type="HBoxContainer" parent="Frame/Content" unique_id=1940050944]
+layout_mode = 2
+theme_override_constants/separation = 22
+
+[node name="RetryBtn" type="Button" parent="Frame/Content/BtnRow" unique_id=267598024]
+layout_mode = 2
+size_flags_horizontal = 3
+text = "🔄 ลองใหม่"
+
+[node name="HomeBtn" type="Button" parent="Frame/Content/BtnRow" unique_id=466541301]
+layout_mode = 2
+size_flags_horizontal = 3
+text = "🏠 หน้าหลัก"
+
+[node name="LBBtn" type="Button" parent="Frame/Content/BtnRow" unique_id=775680922]
+layout_mode = 2
+size_flags_horizontal = 3
+text = "🏆 อันดับ"

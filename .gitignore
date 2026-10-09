@@ -1,0 +1,18 @@
+# Godot cache (regenerated automatically)
+.godot/
+.import/
+
+# Build outputs (exported games - too big for GitHub; upload to Releases instead)
+build/
+*.zip
+*.pck
+*.app/
+
+# Working folders / backups
+_source/
+_to_delete/
+*.bak
+*.bak_*
+
+# OS
+.DS_Store

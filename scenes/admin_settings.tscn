@@ -1,0 +1,7 @@
+[gd_scene format=3 uid="uid://b11d01xkvju3w"]
+
+[ext_resource type="Script" uid="uid://t5fyuqr2vvmh" path="res://scripts/admin_settings.gd" id="1_as"]
+
+[node name="AdminSettings" type="CanvasLayer" unique_id=1025997770]
+layer = 20
+script = ExtResource("1_as")

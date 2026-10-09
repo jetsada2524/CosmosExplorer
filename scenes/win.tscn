@@ -1,0 +1,150 @@
+[gd_scene format=3 uid="uid://win001"]
+
+[ext_resource type="Script" uid="uid://bhhnhqmisobv2" path="res://scripts/win.gd" id="1_win"]
+
+[node name="Win" type="Control" unique_id=273338539]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+script = ExtResource("1_win")
+
+[node name="BG" type="ColorRect" parent="." unique_id=1531131894]
+layout_mode = 0
+anchor_right = 1.0
+anchor_bottom = 1.0
+color = Color(0.03, 0.05, 0.14, 1)
+
+[node name="AnimationPlayer" type="AnimationPlayer" parent="." unique_id=1741667799]
+
+[node name="Frame" type="TextureRect" parent="." unique_id=2015660542]
+layout_mode = 1
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -700.0
+offset_top = -380.0
+offset_right = 700.0
+offset_bottom = 479.0
+grow_horizontal = 2
+grow_vertical = 2
+expand_mode = 1
+
+[node name="TrophyLabel" type="Label" parent="Frame" unique_id=1870110128]
+layout_mode = 0
+offset_left = 550.0
+offset_top = -68.0
+offset_right = 850.0
+offset_bottom = 177.0
+text = "🏆"
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="Content" type="VBoxContainer" parent="Frame" unique_id=1274958614]
+layout_mode = 0
+offset_left = 150.0
+offset_top = 132.0
+offset_right = 1250.0
+offset_bottom = 700.0
+theme_override_constants/separation = 8
+
+[node name="BannerLabel" type="Label" parent="Frame/Content" unique_id=1214181584]
+layout_mode = 2
+text = "ภารกิจสำเร็จ! 🎉"
+horizontal_alignment = 1
+
+[node name="StarRow" type="HBoxContainer" parent="Frame/Content" unique_id=2015874541]
+layout_mode = 2
+theme_override_constants/separation = 18
+alignment = 1
+
+[node name="ResultLabel" type="Label" parent="Frame/Content" unique_id=2016491655]
+layout_mode = 2
+horizontal_alignment = 1
+
+[node name="StatsRow" type="HBoxContainer" parent="Frame/Content" unique_id=529940602]
+layout_mode = 2
+
+[node name="TimeBox" type="PanelContainer" parent="Frame/Content/StatsRow" unique_id=1757815386]
+custom_minimum_size = Vector2(270, 0)
+layout_mode = 2
+size_flags_vertical = 4
+
+[node name="TimeRow" type="HBoxContainer" parent="Frame/Content/StatsRow/TimeBox" unique_id=2010775461]
+layout_mode = 2
+theme_override_constants/separation = 10
+
+[node name="TimeLabel" type="Label" parent="Frame/Content/StatsRow/TimeBox/TimeRow" unique_id=1828810738]
+layout_mode = 2
+text = "00:00"
+vertical_alignment = 1
+
+[node name="SpacerL" type="Control" parent="Frame/Content/StatsRow" unique_id=667027189]
+layout_mode = 2
+size_flags_horizontal = 3
+
+[node name="ScoreLabel" type="Label" parent="Frame/Content/StatsRow" unique_id=1831247146]
+layout_mode = 2
+text = "0"
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="SpacerR" type="Control" parent="Frame/Content/StatsRow" unique_id=462226429]
+layout_mode = 2
+size_flags_horizontal = 3
+
+[node name="CoinBox" type="PanelContainer" parent="Frame/Content/StatsRow" unique_id=1592412946]
+custom_minimum_size = Vector2(270, 0)
+layout_mode = 2
+size_flags_vertical = 4
+
+[node name="CoinRow" type="HBoxContainer" parent="Frame/Content/StatsRow/CoinBox" unique_id=469713470]
+layout_mode = 2
+theme_override_constants/separation = 14
+
+[node name="CoinLabel" type="Label" parent="Frame/Content/StatsRow/CoinBox/CoinRow" unique_id=597615401]
+layout_mode = 2
+text = "0"
+vertical_alignment = 1
+
+[node name="RankStatusLabel" type="Label" parent="Frame/Content" unique_id=1404748771]
+layout_mode = 2
+text = "อันดับของคุณ"
+horizontal_alignment = 1
+autowrap_mode = 3
+
+[node name="BadgeRow" type="HBoxContainer" parent="Frame/Content" unique_id=1542741161]
+layout_mode = 2
+theme_override_constants/separation = 16
+alignment = 1
+
+[node name="BtnRow" type="HBoxContainer" parent="Frame/Content" unique_id=157052832]
+layout_mode = 2
+theme_override_constants/separation = 18
+
+[node name="HomeBtn" type="Button" parent="Frame/Content/BtnRow" unique_id=1456574258]
+layout_mode = 2
+size_flags_horizontal = 3
+text = "🏠 หน้าหลัก"
+
+[node name="RetryBtn" type="Button" parent="Frame/Content/BtnRow" unique_id=601112817]
+layout_mode = 2
+size_flags_horizontal = 3
+text = "🔄 เล่นอีกครั้ง"
+
+[node name="NextBtn" type="Button" parent="Frame/Content/BtnRow" unique_id=22108207]
+layout_mode = 2
+size_flags_horizontal = 3
+text = "▶ ดาวใหม่"
+
+[node name="ViewLeaderboardBtn" type="Button" parent="Frame" unique_id=1002719919]
+layout_mode = 0
+offset_left = 150.0
+offset_top = 727.0
+offset_right = 1250.0
+offset_bottom = 786.0
+text = "🏆 ดูอันดับ"

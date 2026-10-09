@@ -1,0 +1,9 @@
+[gd_resource type="Theme" load_steps=4 format=3]
+
+[ext_resource type="FontFile" path="res://fonts/Itim/Itim-Regular.ttf" id="1_itim"]
+[ext_resource type="FontFile" path="res://fonts/Baloo_2/Baloo2-VariableFont_wght.ttf" id="2_baloo"]
+[ext_resource type="FontFile" path="res://fonts/Sarabun/Sarabun-Medium.ttf" id="3_sarabun"]
+
+[resource]
+default_font = ExtResource("1_itim")
+default_font_size = 22
