@@ -53,6 +53,7 @@ signal sfx_mute_changed(muted: bool)
 const SILENCE_DB: float = -80.0
 
 func _ready() -> void:
+	_ensure_buses()
 	_bgm_player = AudioStreamPlayer.new()
 	_bgm_player.bus = BUS_BGM
 	add_child(_bgm_player)
@@ -170,3 +171,14 @@ func set_bgm_muted(muted: bool) -> void:
 func set_sfx_muted(muted: bool) -> void:
 	sfx_muted = muted
 	sfx_mute_changed.emit(sfx_muted)
+
+# สร้าง bus BGM / SFX ถ้ายังไม่มี (กันพลาดกรณี default_bus_layout.tres หาย)
+# บน Web (ไม่มี thread) Godot เล่นเสียงแบบ sample ซึ่งจะ error "invalid bus index -1"
+# ถ้า AudioStreamPlayer อ้างชื่อ bus ที่ไม่มีอยู่จริง
+func _ensure_buses() -> void:
+	for bus_name in [BUS_BGM, BUS_SFX]:
+		if AudioServer.get_bus_index(bus_name) == -1:
+			AudioServer.add_bus()
+			var idx := AudioServer.bus_count - 1
+			AudioServer.set_bus_name(idx, bus_name)
+			AudioServer.set_bus_send(idx, BUS_MASTER)
