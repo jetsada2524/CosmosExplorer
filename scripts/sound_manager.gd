@@ -52,6 +52,11 @@ signal sfx_mute_changed(muted: bool)
 # ทำให้ tween คำนวณได้ NaN (lerp(-inf, finite, t) = NaN เมื่อ 0<t<1)
 const SILENCE_DB: float = -80.0
 
+# Web: เบราว์เซอร์บล็อกเสียงจนกว่าผู้เล่นจะคลิก/แตะ/กดปุ่มครั้งแรก (autoplay policy)
+# → จำ BGM ที่ขอเล่นไว้ แล้วสั่งเล่นใหม่ทันทีเมื่อได้รับ input ครั้งแรก
+var _current_bgm_key: String = ""
+var _web_audio_unlocked: bool = not OS.has_feature("web")
+
 func _ready() -> void:
 	_ensure_buses()
 	_bgm_player = AudioStreamPlayer.new()
@@ -71,6 +76,7 @@ func play_bgm(key: String, fade_in: float = 1.0) -> void:
 		return
 	if not ResourceLoader.exists(BGM_PATHS[key]):  # export: .ogg ต้นฉบับไม่ถูกแพ็ก มีแต่ไฟล์ที่ import แล้ว
 		return   # ไฟล์ยังไม่มี — ข้ามโดยไม่ error
+	_current_bgm_key = key
 	var stream: AudioStream = load(BGM_PATHS[key])
 	# บังคับให้ BGM เล่นซ้ำไปเรื่อยๆ (infinite loop) แทนที่จะหยุดเมื่อเล่นจบ
 	if stream is AudioStreamOggVorbis or stream is AudioStreamMP3:
@@ -182,3 +188,18 @@ func _ensure_buses() -> void:
 			var idx := AudioServer.bus_count - 1
 			AudioServer.set_bus_name(idx, bus_name)
 			AudioServer.set_bus_send(idx, BUS_MASTER)
+
+func _input(event: InputEvent) -> void:
+	if _web_audio_unlocked:
+		return
+	var is_gesture: bool = (event is InputEventMouseButton and event.pressed) \
+		or (event is InputEventScreenTouch and event.pressed) \
+		or (event is InputEventKey and event.pressed)
+	if not is_gesture:
+		return
+	_web_audio_unlocked = true
+	# รอให้ Godot ปลดล็อก AudioContext ของเบราว์เซอร์ก่อน แล้วค่อยเริ่มเพลงใหม่
+	await get_tree().create_timer(0.15).timeout
+	if _current_bgm_key != "":
+		_bgm_player.stop()
+		play_bgm(_current_bgm_key, 0.6)
