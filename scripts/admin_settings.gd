@@ -59,7 +59,7 @@ func _build_ui() -> void:
         var default_t: float = float(p.get("time_limit", 300))
         var current_t: float = GameSettings.get_planet_time(pid, default_t)
         var spin := _add_spin_row(content, p.get("name_th", pid), current_t, 10.0, 3600.0, 5.0)
-        spin.value_changed.connect(func(v: float): GameSettings.set_planet_time(pid, v))
+        spin.value_changed.connect(func(v: float): GameSettings.set_planet_time(pid, v, default_t))
 
     # ── 6.2 / 6.3 / 6.4 ค่าทั่วไป ───────────────────────────────
     _add_section_header(content, "⏱ ค่าทั่วไปที่ตั้งค่าได้")

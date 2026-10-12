@@ -52,11 +52,21 @@ func _ready() -> void:
     settings_changed.connect(_save_to_file)
 
 # ── 6.1 เวลาต่อดวงดาว ───────────────────────────────────────────
+# override เก็บเป็น {"time": วินาทีที่ admin ตั้ง, "base": time_limit ใน planets.json ตอนที่ตั้ง}
+# → ถ้าภายหลังแก้ time_limit ใน planets.json (base ไม่ตรง) จะถือว่า override เก่าหมดอายุ
+#   และกลับไปใช้ค่าจาก planets.json ทันที (เดิมค่า admin ที่บันทึกไว้จะทับ JSON ตลอดไป)
 func get_planet_time(planet_id: String, default_time: float) -> float:
-    return planet_time_overrides.get(planet_id, default_time)
+    var o = planet_time_overrides.get(planet_id)
+    if o is Dictionary and is_equal_approx(float(o.get("base", -1.0)), default_time):
+        return float(o.get("time", default_time))
+    return default_time
 
-func set_planet_time(planet_id: String, time_sec: float) -> void:
-    planet_time_overrides[planet_id] = maxf(10.0, time_sec)
+func set_planet_time(planet_id: String, time_sec: float, default_time: float) -> void:
+    var t := maxf(10.0, time_sec)
+    if is_equal_approx(t, default_time):
+        planet_time_overrides.erase(planet_id)   # เท่าค่า JSON → ไม่ต้องเก็บ override
+    else:
+        planet_time_overrides[planet_id] = {"time": t, "base": default_time}
     settings_changed.emit()
 
 # ── 6.2 ความถี่ drop ไอเทม ──────────────────────────────────────
@@ -169,7 +179,12 @@ func load_data() -> void:
         return
     var d: Dictionary = parsed
     if d.get("planet_time_overrides") is Dictionary:
-        planet_time_overrides = (d["planet_time_overrides"] as Dictionary).duplicate()
+        planet_time_overrides.clear()
+        var raw: Dictionary = d["planet_time_overrides"]
+        for pid in raw:
+            # รูปแบบเก่า (เก็บแค่ตัวเลข ไม่รู้ว่าอิง JSON ค่าไหน) → ทิ้ง ใช้ค่าจาก planets.json แทน
+            if raw[pid] is Dictionary:
+                planet_time_overrides[pid] = raw[pid]
     powerup_drop_interval = float(d.get("powerup_drop_interval", powerup_drop_interval))
     overflow_coin_bonus   = int(d.get("overflow_coin_bonus", overflow_coin_bonus))
     boost_fall_mult        = float(d.get("boost_fall_mult", boost_fall_mult))
