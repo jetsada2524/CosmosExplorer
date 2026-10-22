@@ -803,6 +803,15 @@ func _setup_ship_3d(avatar: int) -> bool:
     return true
 
 func _animate_ship_3d() -> void:
+    # Web: ยาน 3D ที่ยังอยู่นอกจอจะยังไม่ถูกวาด → shader ของยานไปคอมไพล์ตอนโผล่เข้าจอกลาง animation (กระตุก)
+    # จึงวาดยานแบบมองไม่เห็นที่ตำแหน่งในจอ 3 เฟรมก่อน ให้ shader พร้อมตั้งแต่ต้นฉาก
+    _ship3d_container.modulate.a = 0.0
+    _ship3d_node.position = Vector3(0.0, 0.0, 0.0)
+    _jet_power = 0.0                      # ซ่อนไอพ่นระหว่าง warm-up
+    for i in 3:
+        await get_tree().process_frame
+    _ship3d_container.modulate.a = 1.0
+    _jet_power = 1.0
     var ppu := _px_per_unit()
     var land_y := _screen_to_world_y(LAND_GROUND_Y) - float(_s3_cfg["bottom"]) * float(_s3_cfg["scale"])
     var hover_y := land_y + 120.0 / ppu

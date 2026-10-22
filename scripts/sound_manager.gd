@@ -61,6 +61,11 @@ func _ready() -> void:
 	_ensure_buses()
 	_bgm_player = AudioStreamPlayer.new()
 	_bgm_player.bus = BUS_BGM
+	if OS.has_feature("web"):
+		# Web (ไม่มี thread) ค่าเริ่มต้นเล่นเสียงแบบ "sample" ซึ่งต้องถอดรหัสไฟล์ทั้งเพลง
+		# บน main thread ก่อนเล่น (เพลง 1–2 นาที = เกมค้างหลายร้อย ms–วินาที)
+		# → เพลงยาวให้เล่นแบบ stream ทีละส่วนแทน
+		_bgm_player.playback_type = AudioServer.PLAYBACK_TYPE_STREAM
 	add_child(_bgm_player)
 	for i in SFX_POOL_SIZE:
 		var p := AudioStreamPlayer.new()
@@ -68,6 +73,8 @@ func _ready() -> void:
 		add_child(p)
 		_sfx_pool.append(p)
 	_apply_volumes()
+	if OS.has_feature("web"):
+		_preregister_sfx.call_deferred()
 
 # ──────────────────────────────────────────────────────────────
 func play_bgm(key: String, fade_in: float = 1.0) -> void:
@@ -203,3 +210,13 @@ func _input(event: InputEvent) -> void:
 	if _current_bgm_key != "":
 		_bgm_player.stop()
 		play_bgm(_current_bgm_key, 0.6)
+
+# Web: เตรียมเสียงเอฟเฟกต์สั้น ๆ (รวม ~1 MB) ไว้ล่วงหน้าตอนเปิดเกม
+# ไม่ให้ไปถอดรหัสตอนเล่นครั้งแรกกลางเกม (เช่น เสียง countdown / ชน / เก็บไอเทม)
+func _preregister_sfx() -> void:
+	for key in SFX_PATHS:
+		var path: String = SFX_PATHS[key]
+		if ResourceLoader.exists(path):
+			var st := load(path) as AudioStream
+			if st and not AudioServer.is_stream_registered_as_sample(st):
+				AudioServer.register_stream_as_sample(st)
