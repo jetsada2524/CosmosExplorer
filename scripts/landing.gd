@@ -64,6 +64,7 @@ func _ready() -> void:
     _build_landing_fx()
     _animate_descent()
     advance_timer.timeout.connect(_on_advance)
+    advance_timer.wait_time = HOLD_SECONDS   # ค้างหน้า landing + animation ก่อนไปหน้าผลลัพธ์
     advance_timer.start()
 
 func _process(delta: float) -> void:
@@ -155,8 +156,9 @@ func _populate() -> void:
     _is_ufo_landing     = (avatar == 1)
     _is_special_landing = (avatar == 2)
 
-    # ยาน 2D ตามหน้าเลือกตัวละคร (Explorer / Wing / Comet) + ไอพ่นพุ่งลงด้านล่าง
-    _setup_ship_2d(avatar)
+    # ยาน 3D ชุดใหม่ (assets/models/ships) — ถ้าโหลดไม่ได้ใช้รูป 2D ตามหน้าเลือกตัวละครแทน
+    if not _setup_ship_3d(avatar):
+        _setup_ship_2d(avatar)
 
 # ── 3D Planet Background ──────────────────────────────────────
 func _spawn_3d_planet_bg(planet_id: String) -> void:
@@ -328,6 +330,9 @@ func _spawn_3d_ship(glb_path: String) -> void:
 
 # ── Animation ──────────────────────────────────────────────────
 func _animate_descent() -> void:
+    if _s3_active:
+        _animate_ship_3d()
+        return
     if _ship2d_active:
         _animate_ship_2d()
         return
@@ -444,12 +449,12 @@ func _add_planet_halo(planet_id: String) -> void:
     move_child(halo, planet_sky.get_index())   # อยู่หลังดาว
 
 func _build_landing_fx() -> void:
-    var tint := Color.WHITE.lerp(_planet_color().lightened(0.30), 0.32)
+    var _tint := Color.WHITE.lerp(_planet_color().lightened(0.30), 0.32)
     if surface.has_node("SurfaceRidge"):
         surface.get_node("SurfaceRidge").hide()   # ขอบแข็งของพื้นผิว — ให้เมฆกลืนเส้นขอบฟ้าแทน
     # ── ลำไอพ่น (อยู่หลังตัวยาน) ──
     var jet_tex := _fx_tex("res://assets/ui/landing_jet.png")
-    var n_jets: int = _nozzles.size() if _ship2d_active else (maxi(_engine_nodes.size(), 1) if _ship3d_container else 0)
+    var n_jets: int = _jet_markers.size() if _s3_active else (_nozzles.size() if _ship2d_active else (maxi(_engine_nodes.size(), 1) if _ship3d_container else 0))
     for i in n_jets:
         var j := Sprite2D.new()
         j.texture = jet_tex
@@ -458,19 +463,13 @@ func _build_landing_fx() -> void:
         var mat := CanvasItemMaterial.new()
         mat.blend_mode = CanvasItemMaterial.BLEND_MODE_ADD
         j.material = mat
-        if _ship2d_active:
+        if _s3_active:
+            j.self_modulate = _s3_cfg["tint"]
+        elif _ship2d_active:
             j.self_modulate = SHIP2D_JET_TINT[_ship2d_idx]
         add_child(j)
         _jets.append(j)
-    # ── เมฆฝุ่นด้านหลัง/ด้านหน้า (ทับพื้นผิว และปลายไอพ่น) ──
-    _cloud_back = TextureRect.new()
-    _cloud_back.texture = _fx_tex("res://assets/ui/landing_cloud_back.png")
-    _cloud_back.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
-    _cloud_back.position = Vector2(-240, CLOUD_TOP_BACK)
-    _cloud_back.size = Vector2(2400, 420)
-    _cloud_back.modulate = tint.darkened(0.08)
-    _cloud_back.mouse_filter = Control.MOUSE_FILTER_IGNORE
-    add_child(_cloud_back)
+    # (เอาเมฆฝุ่นภาพนิ่งออกแล้ว — ใช้ควันแบบ animation จาก particle แทน)
     # ไอพ่น + ยาน อยู่หน้าเมฆชั้นหลัง (แสงไอพ่นส่องทับเมฆ) แต่หลังเมฆชั้นหน้า
     for j in _jets:
         move_child(j, get_child_count() - 1)
@@ -488,6 +487,7 @@ func _build_landing_fx() -> void:
     spm.blend_mode = CanvasItemMaterial.BLEND_MODE_ADD
     splash.material = spm
     add_child(splash)
+    _splash = splash
     var stw := splash.create_tween().set_loops()
     stw.tween_property(splash, "modulate:a", 0.45, 0.35)
     stw.tween_property(splash, "modulate:a", 0.8, 0.35)
@@ -513,14 +513,10 @@ func _build_landing_fx() -> void:
     smat.blend_mode = CanvasItemMaterial.BLEND_MODE_ADD
     sparks.material = smat
     add_child(sparks)
-    _cloud_front = TextureRect.new()
-    _cloud_front.texture = _fx_tex("res://assets/ui/landing_cloud_front.png")
-    _cloud_front.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
-    _cloud_front.position = Vector2(-240, CLOUD_TOP_FRONT)
-    _cloud_front.size = Vector2(2400, 560)
-    _cloud_front.modulate = tint
-    _cloud_front.mouse_filter = Control.MOUSE_FILTER_IGNORE
-    add_child(_cloud_front)
+    _sparks = sparks
+    if _s3_active:
+        sparks.position.y = LAND_GROUND_Y + 30.0
+        splash.position.y = LAND_GROUND_Y + 30.0
     # ละอองประกายสีทองลอยเหนือเมฆ
     var embers := CPUParticles2D.new()
     embers.texture = _soft_dot(16)
@@ -545,12 +541,17 @@ func _build_landing_fx() -> void:
     emat.blend_mode = CanvasItemMaterial.BLEND_MODE_ADD
     embers.material = emat
     add_child(embers)
+    if _s3_active:
+        _build_smoke_fx()   # ควันฝุ่นอยู่หน้าเมฆ (เห็นชัดตอนพวยพุ่ง)
     # ข้อความ + ป้ายข้อเท็จจริง อยู่บนสุด
     for n in [title_label, sub_label, fact_badge]:
         move_child(n, get_child_count() - 1)
 
 # ลำไอพ่นตามตำแหน่งท่อไอพ่นของยาน 3D (แปลงพิกัด 3D → จอ)
 func _update_jets() -> void:
+    if _s3_active:
+        _update_jets_3d()
+        return
     if _ship2d_active:
         _update_jets_2d()
         return
@@ -647,3 +648,330 @@ func _update_jets_2d() -> void:
         var flick := randf_range(0.90, 1.10)
         j.scale = Vector2((0.62 if many else 0.80) * flick, len_px / 512.0 * randf_range(0.95, 1.05))
         j.modulate.a = randf_range(0.85, 1.0)
+
+
+# ==============================================================
+#  ยาน 3D ชุดใหม่ (assets/models/ships) — ลงจอดจริงแบบ 3D
+#  • ไอพ่นเฉพาะของแต่ละลำ (ตำแหน่งท่อ/จำนวน/สี ตามโมเดล)
+#  • ควันฝุ่นพวยพุ่งตอนไอพ่นกระทบพื้น + ระเบิดฝุ่นตอนแตะพื้น
+#  • ค้างหน้า landing ไว้ HOLD_SECONDS วินาที แล้วจึงไปหน้าผลลัพธ์
+# ==============================================================
+const HOLD_SECONDS   := 10.0
+const SMOKE_TEX      := "res://assets/ui/landing_smoke_puff.png"
+const CAM_Z          := 10.0
+const CAM_FOV        := 30.0
+const LAND_GROUND_Y  := 785.0    # ระดับพื้น (พิกัดจอ) ที่ฐานยานแตะตอนลงจอด
+const T_DESCENT      := 3.2      # ร่อนลงจากฟ้าจนลอยนิ่งเหนือพื้น
+const T_SETTLE       := 1.1      # ค่อย ๆ หย่อนตัวจนแตะพื้น
+const T_ENGINE_OFF   := 1.3      # ไอพ่นค่อย ๆ ดับหลังแตะพื้น
+
+# jets = จุดปากท่อไอพ่น (พิกัดในโมเดล), jet_w = ความกว้างลำไอพ่น
+# bottom = จุดต่ำสุดของโมเดล (ใช้วางให้ฐานยานแตะพื้นพอดี)
+const SHIPS3D: Array = [
+    {   # 0 Explorer (ship1) — แผ่นไอพ่นใหญ่ใต้ท้อง + บูสเตอร์ท้าย 2 ตัว
+        "path": "res://assets/models/ships/ship1.glb",
+        "scale": 0.60, "yaw": -118.0, "pitch": 9.0, "bottom": -0.99,
+        "jets": [Vector3(0.0, -0.92, -0.30), Vector3(0.42, -0.46, 1.35), Vector3(-0.42, -0.46, 1.35)],
+        "jet_w": [1.30, 0.62, 0.62],
+        "tint": Color(1.00, 0.82, 0.52),
+        "flames": "BoosterFlames",
+    },
+    {   # 1 Wing (ship2) — เครื่องยนต์คู่ใต้ปีก
+        "path": "res://assets/models/ships/ship2.glb",
+        "scale": 0.50, "yaw": -118.0, "pitch": 9.0, "bottom": -0.44,
+        "jets": [Vector3(0.64, -0.36, 1.15), Vector3(-0.64, -0.36, 1.15)],
+        "jet_w": [0.90, 0.90],
+        "tint": Color(1.00, 0.74, 0.94),
+        "flames": "EngineFlames",
+    },
+    {   # 2 Comet pod (ship3) — เครื่องยนต์หลักกลางฐาน ระหว่างขาลงจอด 4 ขา
+        "path": "res://assets/models/ships/ship3.glb",
+        "scale": 0.76, "yaw": 156.0, "pitch": 7.0, "bottom": -0.02,
+        "jets": [Vector3(0.0, 0.17, 0.0)],
+        "jet_w": [1.75],
+        "tint": Color(1.00, 0.84, 0.52),
+        "flames": "",
+    },
+]
+
+var _s3_active: bool = false
+var _s3_cfg: Dictionary = {}
+var _s3_ship: Node3D = null
+var _jet_markers: Array[Node3D] = []
+var _flame_nodes: Array[GeometryInstance3D] = []
+var _jet_light: OmniLight3D = null
+var _jet_power: float = 1.0
+var _landed: bool = false
+var _sparks: CPUParticles2D = null
+var _splash: Sprite2D = null
+var _smoke_jet: Array[CPUParticles2D] = []
+var _smoke_linger: CPUParticles2D = null
+
+func _px_per_unit() -> float:
+    return 1080.0 / (2.0 * CAM_Z * tan(deg_to_rad(CAM_FOV * 0.5)))
+
+func _screen_to_world_y(y: float) -> float:
+    return (540.0 - y) / _px_per_unit()
+
+func _setup_ship_3d(avatar: int) -> bool:
+    var idx := clampi(avatar, 0, SHIPS3D.size() - 1)
+    var cfg: Dictionary = SHIPS3D[idx]
+    if not ResourceLoader.exists(cfg["path"]):
+        return false
+    var ps := load(cfg["path"]) as PackedScene
+    if ps == null:
+        return false
+    _s3_active = true
+    _s3_cfg = cfg
+    _ship2d_idx = idx
+    ship_sprite.hide()
+    thruster_glow.hide()
+
+    # SubViewport เต็มจอ → พิกัดจอ = พิกัดใน viewport (คำนวณตำแหน่งไอพ่นง่าย)
+    var cont := SubViewportContainer.new()
+    cont.stretch = true
+    cont.mouse_filter = Control.MOUSE_FILTER_IGNORE
+    cont.set_anchors_preset(Control.PRESET_FULL_RECT)
+    add_child(cont)
+    var vp := SubViewport.new()
+    vp.size = Vector2i(1920, 1080)
+    vp.transparent_bg = true
+    vp.own_world_3d = true
+    vp.msaa_3d = Viewport.MSAA_4X
+    vp.render_target_update_mode = SubViewport.UPDATE_ALWAYS
+    cont.add_child(vp)
+    var root := Node3D.new()
+    vp.add_child(root)
+
+    var cam := Camera3D.new()
+    cam.position = Vector3(0.0, 0.0, CAM_Z)
+    cam.fov = CAM_FOV
+    cam.near = 0.1
+    cam.far = 60.0
+    root.add_child(cam)
+
+    var we := WorldEnvironment.new()
+    var env := Environment.new()
+    env.background_mode = Environment.BG_COLOR
+    env.background_color = Color(0, 0, 0, 0)
+    env.ambient_light_source = Environment.AMBIENT_SOURCE_COLOR
+    env.ambient_light_color = Color(0.62, 0.62, 0.78)
+    env.ambient_light_energy = 0.55
+    env.tonemap_mode = Environment.TONE_MAPPER_FILMIC
+    we.environment = env
+    root.add_child(we)
+
+    var key := DirectionalLight3D.new()           # แสงหลัก อุ่น จากซ้ายบน-หน้า
+    key.light_color = Color(1.0, 0.94, 0.84)
+    key.light_energy = 1.5
+    key.rotation_degrees = Vector3(-38.0, -32.0, 0.0)
+    root.add_child(key)
+    var rim := DirectionalLight3D.new()           # แสงขอบ สีตามดาวปลายทาง (จากด้านหลัง)
+    rim.light_color = _planet_color().lightened(0.35)
+    rim.light_energy = 1.1
+    rim.rotation_degrees = Vector3(-20.0, 160.0, 0.0)
+    root.add_child(rim)
+
+    var pivot := Node3D.new()
+    root.add_child(pivot)
+    var ship := ps.instantiate() as Node3D
+    ship.scale = Vector3.ONE * float(cfg["scale"])
+    ship.rotation_degrees = Vector3(float(cfg["pitch"]), float(cfg["yaw"]), 0.0)
+    pivot.add_child(ship)
+    for p in cfg["jets"]:
+        var m := Marker3D.new()
+        m.position = p
+        ship.add_child(m)
+        _jet_markers.append(m)
+    if str(cfg["flames"]) != "":
+        var f := ship.find_child(str(cfg["flames"]), true, false) as GeometryInstance3D
+        if f:
+            _flame_nodes.append(f)
+    # แสงไอพ่นส่องใต้ท้องยาน
+    _jet_light = OmniLight3D.new()
+    _jet_light.light_color = cfg["tint"]
+    _jet_light.light_energy = 2.5
+    _jet_light.omni_range = 4.0
+    _jet_light.position = Vector3(0.0, float(cfg["bottom"]) * float(cfg["scale"]) - 0.6, 0.6)
+    pivot.add_child(_jet_light)
+
+    _ship3d_container = cont
+    _ship3d_viewport = vp
+    _ship_cam = cam
+    _ship3d_node = pivot
+    _s3_ship = ship
+    return true
+
+func _animate_ship_3d() -> void:
+    var ppu := _px_per_unit()
+    var land_y := _screen_to_world_y(LAND_GROUND_Y) - float(_s3_cfg["bottom"]) * float(_s3_cfg["scale"])
+    var hover_y := land_y + 120.0 / ppu
+    _ship3d_node.position = Vector3(-1.4, land_y + 900.0 / ppu, 0.0)
+    _ship3d_node.rotation_degrees = Vector3(0.0, 0.0, 9.0)
+    var tw := create_tween()
+    tw.tween_property(_ship3d_node, "position", Vector3(0.0, hover_y, 0.0), T_DESCENT) \
+        .set_trans(Tween.TRANS_CUBIC).set_ease(Tween.EASE_OUT)
+    tw.parallel().tween_property(_ship3d_node, "rotation_degrees:z", 0.0, T_DESCENT) \
+        .set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_OUT)
+    tw.parallel().tween_callback(_start_jet_smoke).set_delay(1.2)
+    tw.tween_interval(0.25)
+    tw.tween_property(_ship3d_node, "position:y", land_y, T_SETTLE) \
+        .set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN_OUT)
+    tw.tween_callback(_on_touchdown)
+    # ยุบตัวเล็กน้อยตอนกระแทกพื้น แล้วเด้งกลับ
+    tw.tween_property(_ship3d_node, "scale", Vector3(1.04, 0.94, 1.04), 0.08)
+    tw.tween_property(_ship3d_node, "scale", Vector3.ONE, 0.45) \
+        .set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
+    # ไอพ่นดับ
+    tw.tween_method(_set_jet_power, 1.0, 0.0, T_ENGINE_OFF) \
+        .set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN)
+    tw.tween_callback(_on_engine_off)
+
+func _set_jet_power(v: float) -> void:
+    _jet_power = v
+
+func _start_jet_smoke() -> void:
+    for s in _smoke_jet:
+        s.emitting = true
+
+func _on_touchdown() -> void:
+    _landed = true
+    if _s3_ship:
+        _s3_ship.rotation_degrees.z = 0.0
+        _s3_ship.rotation_degrees.x = float(_s3_cfg["pitch"])
+    # ระเบิดฝุ่นออกสองข้าง
+    for dir_x in [-1.0, 1.0]:
+        var b := _make_smoke(dir_x, true)
+        add_child(b)
+        move_child(b, title_label.get_index())   # หน้ายาน แต่อยู่ใต้ข้อความ
+        b.emitting = true
+        get_tree().create_timer(b.lifetime + 0.5).timeout.connect(b.queue_free)
+    if _smoke_linger:
+        _smoke_linger.emitting = true
+    # เขย่าจอเบา ๆ
+    var sh := create_tween()
+    for i in 5:
+        sh.tween_property(self, "position", Vector2(randf_range(-7, 7), randf_range(-5, 5)), 0.04)
+    sh.tween_property(self, "position", Vector2.ZERO, 0.06)
+    title_label.text = "ลงจอดสำเร็จ!"
+    title_label.pivot_offset = title_label.size * 0.5
+    var tp := create_tween()
+    tp.tween_property(title_label, "scale", Vector2(1.15, 1.15), 0.12)
+    tp.tween_property(title_label, "scale", Vector2.ONE, 0.30).set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
+
+func _on_engine_off() -> void:
+    for s in _smoke_jet:
+        s.emitting = false
+    if _sparks:
+        _sparks.emitting = false
+    if _splash:
+        var t := _splash.create_tween()
+        t.tween_property(_splash, "modulate:a", 0.0, 0.6)
+
+func _smoke_color() -> Color:
+    # ฝุ่นอมสีพื้นดาว แต่สว่างพอให้เห็นเป็นควันชัดเจน
+    return Color(1.0, 0.98, 0.95).lerp(_planet_color().lightened(0.40), 0.26)
+
+func _make_smoke(dir_x: float, burst: bool) -> CPUParticles2D:
+    var p := CPUParticles2D.new()
+    p.texture = _fx_tex(SMOKE_TEX)
+    p.local_coords = false
+    p.position = Vector2(960.0 + dir_x * (120.0 if burst else 70.0), LAND_GROUND_Y + 26.0)
+    p.emission_shape = CPUParticles2D.EMISSION_SHAPE_RECTANGLE
+    p.emission_rect_extents = Vector2(60, 10)
+    p.direction = Vector2(dir_x, -0.10)
+    p.spread = 12.0
+    p.angle_min = -180.0
+    p.angle_max = 180.0
+    p.angular_velocity_min = -28.0
+    p.angular_velocity_max = 28.0
+    p.gravity = Vector2(0, -18)
+    var c := _smoke_color()
+    var ramp := Gradient.new()
+    ramp.offsets = PackedFloat32Array([0.0, 0.10, 0.55, 1.0])
+    ramp.colors = PackedColorArray([Color(c.r, c.g, c.b, 0.0), Color(c.r, c.g, c.b, 0.85),
+        Color(c.r * 0.97, c.g * 0.97, c.b * 0.97, 0.55), Color(c.r * 0.94, c.g * 0.94, c.b * 0.94, 0.0)])
+    p.color_ramp = ramp
+    var curve := Curve.new()
+    curve.add_point(Vector2(0.0, 0.45))
+    curve.add_point(Vector2(1.0, 1.0))
+    p.scale_amount_curve = curve
+    if burst:
+        p.one_shot = true
+        p.explosiveness = 0.88
+        p.amount = 34
+        p.lifetime = 3.4
+        p.initial_velocity_min = 260.0
+        p.initial_velocity_max = 560.0
+        p.damping_min = 160.0
+        p.damping_max = 240.0
+        p.scale_amount_min = 0.75
+        p.scale_amount_max = 1.35
+    else:
+        p.amount = 40
+        p.lifetime = 2.6
+        p.initial_velocity_min = 160.0
+        p.initial_velocity_max = 420.0
+        p.damping_min = 90.0
+        p.damping_max = 150.0
+        p.scale_amount_min = 0.5
+        p.scale_amount_max = 1.0
+    p.emitting = false
+    return p
+
+func _build_smoke_fx() -> void:
+    # ควันจากไอพ่นกระทบพื้น (สองข้าง) — เริ่มเมื่อยานใกล้พื้น หยุดเมื่อไอพ่นดับ
+    for dir_x in [-1.0, 1.0]:
+        var s := _make_smoke(dir_x, false)
+        add_child(s)
+        _smoke_jet.append(s)
+    # ฝุ่นที่ค่อย ๆ ลอยอ้อยอิ่งหลังลงจอด (ทำให้ฉากยังมีชีวิตระหว่างค้างหน้า)
+    _smoke_linger = _make_smoke(1.0, false)
+    _smoke_linger.amount = 24
+    _smoke_linger.lifetime = 5.5
+    _smoke_linger.direction = Vector2(0, -1)
+    _smoke_linger.spread = 70.0
+    _smoke_linger.emission_rect_extents = Vector2(260, 14)
+    _smoke_linger.position = Vector2(960, LAND_GROUND_Y + 25.0)
+    _smoke_linger.initial_velocity_min = 12.0
+    _smoke_linger.initial_velocity_max = 45.0
+    _smoke_linger.damping_min = 0.0
+    _smoke_linger.damping_max = 4.0
+    _smoke_linger.scale_amount_min = 0.7
+    _smoke_linger.scale_amount_max = 1.4
+    var lc := _smoke_color()
+    var lr := Gradient.new()
+    lr.offsets = PackedFloat32Array([0.0, 0.25, 1.0])
+    lr.colors = PackedColorArray([Color(lc.r, lc.g, lc.b, 0.0), Color(lc.r, lc.g, lc.b, 0.6), Color(lc.r, lc.g, lc.b, 0.0)])
+    _smoke_linger.color_ramp = lr
+    add_child(_smoke_linger)
+
+# ไอพ่น 2D ตามปากท่อของยาน 3D (unproject จากกล้อง) + ความแรงตาม _jet_power
+func _update_jets_3d() -> void:
+    if _ship_cam == null:
+        return
+    var on := _jet_power > 0.02
+    var jw: Array = _s3_cfg["jet_w"]
+    for i in _jets.size():
+        var j := _jets[i]
+        j.visible = on
+        if not on or i >= _jet_markers.size():
+            continue
+        var pos := _ship_cam.unproject_position(_jet_markers[i].global_position)
+        j.position = pos
+        var flick := randf_range(0.92, 1.08)
+        var ground := LAND_GROUND_Y + 50.0
+        var len_px := maxf(ground - pos.y, 60.0) * (0.55 + 0.45 * _jet_power)
+        j.scale = Vector2(float(jw[i]) * (0.45 + 0.55 * _jet_power) * flick,
+            len_px / 512.0 * randf_range(0.95, 1.05))
+        j.modulate.a = _jet_power * randf_range(0.85, 1.0)
+    if _jet_light:
+        _jet_light.light_energy = 2.5 * _jet_power * randf_range(0.85, 1.1)
+    for f in _flame_nodes:
+        f.transparency = clampf(1.0 - _jet_power * randf_range(0.8, 1.0), 0.0, 1.0)
+    if _splash and _jets.size() > 0 and on:
+        _splash.position = Vector2(_jets[0].position.x, LAND_GROUND_Y + 30.0)
+    # ยานโยกเบา ๆ ตอนลอยอยู่ (ก่อนแตะพื้น)
+    if _s3_ship and not _landed:
+        _s3_ship.rotation_degrees.z = sin(_fx_t * 1.7) * 1.6
+        _s3_ship.rotation_degrees.x = float(_s3_cfg["pitch"]) + sin(_fx_t * 1.3 + 0.6) * 1.2
