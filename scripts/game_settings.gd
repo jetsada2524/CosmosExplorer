@@ -48,6 +48,7 @@ const DEFAULTS: Dictionary = {
 func _ready() -> void:
     process_mode = Node.PROCESS_MODE_ALWAYS   # run even when game is paused
     load_data()
+    _autoshot_enabled = _autoshot_on()
     # เซ็ตค่าเปลี่ยนทุกครั้ง (จากเมนูตั้งค่า admin) ให้บันทึกลงไฟล์ทันที
     settings_changed.connect(_save_to_file)
 
@@ -137,7 +138,19 @@ var _shot_counter: int = 0
 var _last_scene_path: String = ""
 var _is_auto_capturing: bool = false
 
+# auto screenshot ทุกครั้งที่เปลี่ยนฉาก (ใช้ตอนพัฒนา/ทดสอบ) — อ่านภาพทั้งจอกลับจาก GPU + เข้ารหัส PNG
+# ใช้เวลาหลายร้อย ms → เกมกระตุก จึงเปิดเฉพาะตอนรันจาก editor และมีไฟล์ AUTOSHOT_FLAG เขียนว่า 1
+const AUTOSHOT_FLAG: String = "res://_autoshot.flag"
+var _autoshot_enabled: bool = false
+
+func _autoshot_on() -> bool:
+    if not OS.has_feature("editor") or not FileAccess.file_exists(AUTOSHOT_FLAG):
+        return false
+    return FileAccess.get_file_as_string(AUTOSHOT_FLAG).strip_edges() == "1"
+
 func _process(_delta: float) -> void:
+    if not _autoshot_enabled:
+        return
     if get_tree() == null or get_tree().current_scene == null:
         return
     var scene_path: String = get_tree().current_scene.scene_file_path
