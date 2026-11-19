@@ -134,7 +134,7 @@ func _create_sound_toggles() -> void:
     bgm_toggle.text = "BGM  ON"
     bgm_toggle.add_theme_font_size_override("font_size", 20)
     bgm_toggle.mouse_filter = Control.MOUSE_FILTER_STOP
-    full_rect.add_child(bgm_toggle)
+    #full_rect.add_child(bgm_toggle)
 
     # ── ปุ่ม SFX ──────────────────────────────────────────────
     sfx_toggle = Button.new()
@@ -144,7 +144,7 @@ func _create_sound_toggles() -> void:
     sfx_toggle.text = "SFX  ON"
     sfx_toggle.add_theme_font_size_override("font_size", 20)
     sfx_toggle.mouse_filter = Control.MOUSE_FILTER_STOP
-    full_rect.add_child(sfx_toggle)
+    #full_rect.add_child(sfx_toggle)
 
     # ── สไตล์ + connect ──────────────────────────────────────
     _update_bgm_button_style()
