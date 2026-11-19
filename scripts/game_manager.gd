@@ -56,6 +56,8 @@ func start_mission(planet: Dictionary) -> void:
     var time_limit: float = GameSettings.get_planet_time(
         selected_planet.get("id", ""), float(planet.get("time_limit", 300)))
     selected_planet["time_limit"] = time_limit
+    # สับคำถามของดาวนี้ใหม่ทุกครั้งที่เริ่มด่าน (คำถามไม่ซ้ำภายในด่านเดียวกัน)
+    QuizManager.start_stage(str(selected_planet.get("id", "")))
     current_hp       = MAX_HP
     current_energy   = MAX_ENERGY
     current_score    = 0

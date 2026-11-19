@@ -60,6 +60,12 @@ jobs:
           ~/godot/godot --headless --export-release "Web" build/web/index.html
           ls -la build/web
 
+      - name: Cache-bust game data (index.pck)
+        run: |
+          # ให้ browser โหลด index.pck ใหม่ทุกครั้งที่ deploy (กันเห็นเวอร์ชันเก่าจาก cache)
+          sed -i "s|\"mainPack\":\"index.pck\"|\"mainPack\":\"index.pck?v=${GITHUB_SHA}\"|" build/web/index.html
+          grep -o '"mainPack":"[^"]*"' build/web/index.html || echo "mainPack not found (skipped)"
+
       - uses: actions/upload-pages-artifact@v3
         with:
           path: build/web

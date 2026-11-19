@@ -61,6 +61,9 @@ const BAR_Y              := 1.2     # = CAM_Y → อยู่บนเส้น
 const BAR_DEPTH          := 1.0     # ความหนา hitbox ตามแกน Z
 const SHIP_HALF_W        := 0.70    # ครึ่งความกว้าง hitbox ยาน
 const ITEM_CHANCE        := 0.35    # โอกาสมี item อยู่บนทางรอด
+# กล่องคำถามออกตามรอบ: ช่วงห่าง = เวลาด่าน ÷ จำนวนคำถามของดาว (ไม่สุ่มแล้ว)
+# QUIZ_MIN_INTERVAL กันไม่ให้ถี่เกินไปถ้า admin ตั้งเวลาด่านสั้นมาก
+const QUIZ_MIN_INTERVAL    := 10.0
 const ITEM_EMISSION      := 0.6     # ความเรืองแสงของผิว item (เดิม 5.0)
 const ITEM_LIGHT_ENERGY  := 1.2     # ความสว่างไฟรอบ item (เดิม 8.0)
 const ITEM_PICKUP_R      := 1.80    # รัศมีเก็บ item (แกน X) — ขยายตาม item ที่ใหญ่ขึ้น 3 เท่า
@@ -151,6 +154,9 @@ const NEEDLE_MAX_ANGLE :=  0.75   # radians (≈ +43°)
 
 # ── State ─────────────────────────────────────────────────────────
 var quiz_active:    bool  = false
+var _quiz_slots:    int   = 0      # จำนวนกล่องคำถามทั้งหมดในด่านนี้
+var _quiz_spawned:  int   = 0      # สร้างกล่องคำถามไปแล้วกี่กล่อง
+var _quiz_interval: float = 0.0    # วินาทีระหว่างกล่องคำถาม
 var _shield_active: bool  = false
 
 var _spawn_timer:   float = 0.0   # middle zone timer
@@ -263,6 +269,7 @@ func _ready() -> void:
             _powerup_packed[model_id] = load(cpath)
     camera.position = Vector3(0.0, CAM_Y, 0.0)
     _next_interval  = randf_range(_mid_interval_min(), _mid_interval_max())
+    _setup_quiz_schedule()
     _spawn_cockpit_ship()
     _register_keyboard_inputs()
     _apply_camera_mode()
@@ -702,8 +709,12 @@ func _spawn_row(z: float) -> void:
         _place_bar_in(free_l if use_left else free_r, w, z)
 
     # 4) item วางบนทางรอด กึ่งกลางระหว่างแถวนี้กับแถวถัดไป → รางวัลคนที่เดินทางถูก
-    if randf() < ITEM_CHANCE:
-        _spawn_item_at(Vector3(_path_x, BAR_Y, z - gap_z * 0.5))
+    #    ถ้าถึงรอบกล่องคำถาม → วางกล่องคำถามแทน item สุ่ม
+    var item_pos := Vector3(_path_x, BAR_Y, z - gap_z * 0.5)
+    if _quiz_due(item_pos.z):
+        _spawn_quiz_at(item_pos)
+    elif randf() < ITEM_CHANCE:
+        _spawn_item_at(item_pos)
 
 # วาง bar ความกว้าง w ลงในช่วง free (x from→to) แบบสุ่มตำแหน่ง
 func _place_bar_in(free: Vector2, w: float, z: float) -> void:
@@ -738,15 +749,42 @@ func _spawn_bar(center_x: float, width: float, z: float) -> void:
     meteor_root.add_child(bar)
     _active_meteors.append(bar)
 
-# item บนทางรอด (ไม่มี threat)
+# item บนทางรอด (ไม่มี threat และไม่มี quiz — quiz ออกตามรอบใน _quiz_due)
 func _spawn_item_at(pos: Vector3) -> void:
     var t := "threat"
-    while t == "threat":
+    while t == "threat" or t == "quiz":
         t = _pick_type()
     var model_id: String = _model_for(t)
     if model_id.is_empty() or not _powerup_packed.has(model_id):
         return
     _spawn_powerup_node(t, model_id, pos)
+
+# ── กล่องคำถามตามรอบ ─────────────────────────────────────────────
+# แบ่งเวลาด่านเป็นช่องเท่าๆ กันตามจำนวนคำถามของดาว แล้วให้กล่องคำถาม
+# มาถึงตัวยานตรงกลางของแต่ละช่อง เช่น ดวงจันทร์ 60 วิ / 10 ข้อ → ทุก 6 วิ
+func _setup_quiz_schedule() -> void:
+    var total: float = maxf(1.0, float(GameManager.selected_planet.get("time_limit", 60.0)))
+    _quiz_slots    = mini(QuizManager.stage_question_count(), int(total / QUIZ_MIN_INTERVAL))
+    _quiz_spawned  = 0
+    _quiz_interval = total / _quiz_slots if _quiz_slots > 0 else 0.0
+
+func _mission_elapsed() -> float:
+    var total: float = float(GameManager.selected_planet.get("time_limit", 60.0))
+    return maxf(0.0, total - GameManager.time_remaining)
+
+# กล่องที่วางที่ตำแหน่ง z จะมาถึงยานตอนไหน → ถึงรอบกล่องถัดไปหรือยัง
+func _quiz_due(item_z: float) -> bool:
+    if _quiz_spawned >= _quiz_slots or not QuizManager.has_question_left():
+        return false   # ครบรอบแล้ว หรือคำถามหมด (ดาว + ทั่วไป) → ไม่สร้างกล่องคำถามอีก
+    var arrive_at: float = _mission_elapsed() + (camera.position.z - item_z) / maxf(0.1, _fly_speed())
+    return arrive_at >= (_quiz_spawned + 0.5) * _quiz_interval
+
+func _spawn_quiz_at(pos: Vector3) -> void:
+    _quiz_spawned += 1   # นับรอบแม้ผู้เล่นจะบินพลาดกล่อง → รอบถัดไปตรงเวลาเสมอ
+    var model_id: String = _model_for("quiz")
+    if model_id.is_empty() or not _powerup_packed.has(model_id):
+        return
+    _spawn_powerup_node("quiz", model_id, pos)
 
 # ── Middle zone: spawns threats + items within [ZONE_MID_MIN, ZONE_MID_MAX] ──
 func _spawn_middle() -> void:
@@ -1057,7 +1095,8 @@ func _on_hit(meteor: Node3D) -> void:
                 SoundManager.play_sfx("hit")
                 _shake_camera()
         "quiz":
-            if not quiz_active:
+            if not quiz_active and QuizManager.has_question_left():
+                quiz_active = true   # gameplay.resume_from_quiz() คืนเป็น false หลังปิดคำถาม
                 quiz_triggered.emit()
         "shield":
             _activate_shield()
